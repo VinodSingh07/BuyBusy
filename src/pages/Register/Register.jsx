@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const register = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,9 @@ const register = () => {
     password: "",
     confirmPassword: "",
   });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { register } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -16,9 +20,20 @@ const register = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Register form data:", formData);
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      return setError("Passwords do not match!");
+    }
+
+    try {
+      await register(formData.email, formData.password);
+      navigate("/login");
+    } catch (err) {
+      setError(err.message);
+    }
   };
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">

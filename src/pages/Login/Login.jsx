@@ -1,12 +1,15 @@
-// src/pages/Login.jsx
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -15,9 +18,15 @@ function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login form data:", formData);
+    setError("");
+    try {
+      await login(formData.email, formData.password);
+      navigate("/home");
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
