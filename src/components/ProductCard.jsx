@@ -1,10 +1,43 @@
 import React from "react";
+import { doc, setDoc, getDoc, updateDoc, increment } from "firebase/firestore";
+import { db } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 
 const ProductCard = ({ product }) => {
-  const handleAddToCart = () => {
-    console.log(`Added ${product.name} to cart`);
-    // TODO: Implement Firestore cart logic later
+  const { user } = useAuth(); //Get current user
+
+  const handleAddToCart = async () => {
+    //Check if user is logged in
+    if (!user) return alert("Please login to add items to cart");
+
+    //creating a Firestore document reference at this location
+    //So each user has their own “cart” collection inside their user document.
+    //Each product in their cart is stored by its product ID.
+    const cartRef = doc(db, "users", user.uid, "cart", product.id);
+
+    try {
+      //check if the product is already in the cart
+      const cartDoc = await getDoc(cartRef);
+      if (cartDoc.exists()) {
+        //Product already in cart -> increment quantity
+        await updateDoc(cartRef, { quantity: increment(1) });
+      } else {
+        //Add new product if not already in cart
+        await setDoc(cartRef, {
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity: 1,
+        });
+      }
+      alert(`${product.name} added to cart!`); //This shows a message when the operation is complete.
+      //If any part of the process fails (like no internet or Firebase error),
+      //it prints the error in the console so you can debug.
+    } catch (err) {
+      console.error("Error adding to cart: ", err);
+    }
   };
+
   return (
     <div className="bg-white rounded-2xl shadow-md p-4 hover:shadow-lg transition">
       <img
